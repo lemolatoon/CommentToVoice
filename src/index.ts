@@ -36,6 +36,7 @@ const main = async () => {
         return response.data.choices[0].text ?? "エラーが起きたのだ。";
       } catch (e: unknown) {
         if (e instanceof Error) {
+          console.log(e.message);
           return e.message;
         }
         return "エラーが起きたのだ。";
@@ -47,13 +48,14 @@ const main = async () => {
   liveChat.on("error", (e: unknown) => {
     clearCommentText();
     if (e instanceof Error) {
+        console.log(e.message);
         writeAnswerText(e.message);
     } else { 
         writeAnswerText("エラーハンドリングをしているのだ。");
     }
   })
 
-  liveChat.start();
+  await liveChat.start();
 };
 
 // open files
@@ -62,8 +64,8 @@ const answerTextFileUrl = new URL(import.meta.resolve("./../answer.txt"));
 const commentTextFileUrl = new URL(import.meta.resolve("./../comment.txt"));
 await fs.ensureFile(answerTextFileUrl);
 await fs.ensureFile(commentTextFileUrl);
-const answerTextFile = await Deno.open(answerTextFileUrl);
-const commentTextFile = await Deno.open(commentTextFileUrl);
+const answerTextFile = await Deno.open(answerTextFileUrl, {read: false, write: true});
+const commentTextFile = await Deno.open(commentTextFileUrl, {read: false, write: true});
 
 const writeAnswerText = async (text: string) => {
     const encoder = new TextEncoder();
