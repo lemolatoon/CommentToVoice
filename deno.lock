@@ -32,6 +32,7 @@
   "npm": {
     "specifiers": {
       "openai@3": "openai@3.1.0",
+      "voicevox-api-client@1.1": "voicevox-api-client@1.1.1",
       "youtube-chat@2": "youtube-chat@2.2.0",
       "youtube-chat@2.1": "youtube-chat@2.1.1",
       "youtube-chat@2.2": "youtube-chat@2.2.0"
@@ -67,9 +68,20 @@
           "delayed-stream": "delayed-stream@1.0.0"
         }
       },
+      "data-uri-to-buffer@4.0.1": {
+        "integrity": "sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==",
+        "dependencies": {}
+      },
       "delayed-stream@1.0.0": {
         "integrity": "sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==",
         "dependencies": {}
+      },
+      "fetch-blob@3.2.0": {
+        "integrity": "sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==",
+        "dependencies": {
+          "node-domexception": "node-domexception@1.0.0",
+          "web-streams-polyfill": "web-streams-polyfill@3.2.1"
+        }
       },
       "follow-redirects@1.15.2": {
         "integrity": "sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==",
@@ -83,6 +95,12 @@
           "mime-types": "mime-types@2.1.35"
         }
       },
+      "formdata-polyfill@4.0.10": {
+        "integrity": "sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==",
+        "dependencies": {
+          "fetch-blob": "fetch-blob@3.2.0"
+        }
+      },
       "mime-db@1.52.0": {
         "integrity": "sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==",
         "dependencies": {}
@@ -91,6 +109,18 @@
         "integrity": "sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==",
         "dependencies": {
           "mime-db": "mime-db@1.52.0"
+        }
+      },
+      "node-domexception@1.0.0": {
+        "integrity": "sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==",
+        "dependencies": {}
+      },
+      "node-fetch@3.3.0": {
+        "integrity": "sha512-BKwRP/O0UvoMKp7GNdwPlObhYGB5DQqwhEDQlNKuoqwVYSxkSZCSbHjnFFmUEtwSKRPU4kNK8PbDYYitwaE3QA==",
+        "dependencies": {
+          "data-uri-to-buffer": "data-uri-to-buffer@4.0.1",
+          "fetch-blob": "fetch-blob@3.2.0",
+          "formdata-polyfill": "formdata-polyfill@4.0.10"
         }
       },
       "openai@3.1.0": {
@@ -123,6 +153,16 @@
         "dependencies": {
           "rxjs": "rxjs@7.8.0"
         }
+      },
+      "voicevox-api-client@1.1.1": {
+        "integrity": "sha512-54paASsBDFEIxutXWCQxDHtvOrI/PWCJFr8B5lis8fkt48ohCk0SYP4s7idZtHfZ6QbPNrqQ0NZgN93ntQ+Mnw==",
+        "dependencies": {
+          "node-fetch": "node-fetch@3.3.0"
+        }
+      },
+      "web-streams-polyfill@3.2.1": {
+        "integrity": "sha512-e0MO3wdXWKrLbL0DgGnUV7WHVuw9OUvL4hjgnPkIeEvESk74gAITi5G606JtZPp39cd8HA9VQzCIvA49LpPN5Q==",
+        "dependencies": {}
       },
       "youtube-chat@2.1.1": {
         "integrity": "sha512-5ybLoadfeTIKVPOLGzz+51h+2eWdLws1lH0vfw9gNp81QMq+ke9NM9HOzWE/+1B9DZnRiLt5riSdF9/3kJ3RTg==",

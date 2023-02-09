@@ -1,16 +1,20 @@
 import * as dotenv from "https://deno.land/std@0.177.0/dotenv/mod.ts";
 import * as fs from "https://deno.land/std@0.175.0/fs/mod.ts";
-import * as path from "https://deno.land/std@0.175.0/path/mod.ts";
 import { Configuration, OpenAIApi } from "npm:openai@3";
 import { LiveChat } from "npm:youtube-chat@2.2";
+import * as voicevox from "./generated/index.ts";
 
 const main = async () => {
-  const { apiKey, channelId, liveId } = await getEnvVariables();
+  const { apiKey, channelId, liveId, voicevoxEndpoint } = await getEnvVariables();
   const configuration = new Configuration({
     apiKey: apiKey,
   });
   const openai = new OpenAIApi(configuration);
+  const voicevoxConfiguration = voicevox.createConfiguration();
+  const voicevoxApi = new voicevox.DefaultApi(voicevoxConfiguration);
   const liveChat = new LiveChat({ liveId });
+  await fetchWavFile("test", voicevoxEndpoint, voicevoxApi);
+  return;
 
   const commentTextPrefix = `
 あなたは日本語で配信しているずんだもんです。あなたはこれから視聴者からの質問に答えます。この後に質問が続きます。語尾に必ず「～なのだ」をつけて答えてください。
@@ -70,21 +74,36 @@ const main = async () => {
         return "エラーが起きたのだ。";
       }
     })();
-    console.log({commentText, answerText});
+    console.log({ commentText, answerText });
     await writeAnswerText(answerText);
   });
 
   await liveChat.on("error", (e: unknown) => {
     clearCommentText();
     if (e instanceof Error) {
-        console.log(e.message);
-        writeAnswerText(e.message);
-    } else { 
-        writeAnswerText("エラーハンドリングをしているのだ。");
+      console.log(e.message);
+      writeAnswerText(e.message);
+    } else {
+      writeAnswerText("エラーハンドリングをしているのだ。");
     }
-  })
+  });
 
   await liveChat.start();
+};
+
+const fetchWavFile = async (text: string, endpoint: string, api: voicevox.DefaultApi) => {
+  // const queryOptions: RequestInit = {
+  //   method: "POST",
+  // };
+  // const queryResponse = await fetch(`${endpoint}/audio_query?text=${text}&speaker=1`, queryOptions);
+  // const query = await queryResponse.json();
+  const query = await api.audioQueryAudioQueryPost(text, 1);
+  console.log(query);
+  const wavOptions: RequestInit = {
+    method: "POST",
+    body: JSON.stringify(query),
+  };
+  const wavResponse = await fetch(`${endpoint}/synthesis?speaker=1`, wavOptions)
 };
 
 // open files
@@ -94,11 +113,11 @@ await fs.ensureFile(answerTextFileUrl);
 await fs.ensureFile(commentTextFileUrl);
 
 const writeAnswerText = async (text: string) => {
-    await Deno.writeTextFile(answerTextFileUrl, text);
+  await Deno.writeTextFile(answerTextFileUrl, text);
 };
 
 const writeCommentText = async (text: string) => {
-    await Deno.writeTextFile(commentTextFileUrl, text);
+  await Deno.writeTextFile(commentTextFileUrl, text);
 };
 
 const clearCommentText = () => {
@@ -109,13 +128,13 @@ const getEnvVariables = async () => {
   const apiKey = env["apiKey"];
   const channelId = env["channelId"];
   const liveId = env["liveId"];
-  if (apiKey != null && channelId != null && liveId != null) {
-    return { apiKey, channelId, liveId };
+  const voicevoxEndpoint = env["voicevoxEndpoint"];
+  if (apiKey != null && channelId != null && liveId != null && voicevoxEndpoint != null) {
+    return { apiKey, channelId, liveId, voicevoxEndpoint };
   } else {
-    throw new Error("apiKey or channelId or liveId not found in .env");
+    throw new Error("apiKey or channelId or liveId or voicevoxEndpoint not found in .env");
   }
 };
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(() => resolve(undefined), ms));
 
 main();

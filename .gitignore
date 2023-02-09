@@ -1,3 +1,4 @@
 .env
 answer.txt
 comment.txt
+src/generated/*
