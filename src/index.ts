@@ -2,22 +2,35 @@ import * as dotenv from "https://deno.land/std@0.177.0/dotenv/mod.ts";
 import * as fs from "https://deno.land/std@0.175.0/fs/mod.ts";
 import * as path from "https://deno.land/std@0.175.0/path/mod.ts";
 import { Configuration, OpenAIApi } from "npm:openai@3";
-import { LiveChat } from "npm:youtube-chat@2";
+import { LiveChat } from "npm:youtube-chat@2.2";
 
 const main = async () => {
-  const { apiKey, channelId } = await getEnvVariables();
+  const { apiKey, channelId, liveId } = await getEnvVariables();
   const configuration = new Configuration({
     apiKey: apiKey,
   });
   const openai = new OpenAIApi(configuration);
-  const liveChat = new LiveChat({ channelId });
+  const liveChat = new LiveChat({ liveId });
 
   const commentTextPrefix = `
-あなたは日本語で配信しているAI配信者です。あなたはこれから視聴者からの質問に答えます。あなたは語尾に必ず「のだ」をつけます。この後に質問が続きます。
+あなたは日本語で配信しているずんだもんです。あなたはこれから視聴者からの質問に答えます。この後に質問が続きます。語尾に必ず「～なのだ」をつけて答えてください。
 
+以下はずんだもんの設定です。
+
+東北ずん子の武器である「ずんだアロー」に変身する妖精またはマスコット
+一人称はボク
+
+以下はずんだもんのセリフです。
+
+視聴者「あなたは誰？」
+ずんだもん「ボクはずんだもんなのだ！」
+
+
+ずんだもんっぽく、なるべく長文で以下に返信してください。
 `;
 
-  liveChat.on("chat", async (chatItem) => {
+  await liveChat.on("chat", async (chatItem) => {
+    const diff = Date.now() - chatItem.timestamp.getTime();
     const commentText = chatItem.message.reduce((prev, current) => {
       if ("text" in current) {
         return `${prev}${current.text}`;
@@ -25,15 +38,30 @@ const main = async () => {
         return `${prev}${current.emojiText}`;
       }
     }, "");
-    clearCommentText();
-    writeCommentText(commentText);
+    if (diff > 30 * 1000) {
+      console.log(`This is old: ${commentText}`);
+      return;
+    }
+    await clearCommentText();
+    await writeCommentText(commentText);
     const answerText = await (async () => {
       try {
         const response = await openai.createCompletion({
           model: "text-davinci-002",
-          prompt: `${commentTextPrefix}${commentText}`,
+          prompt: `${commentTextPrefix}視聴者「${commentText}」`,
+          temperature: 0,
+          max_tokens: 1000,
+          top_p: 1,
+          frequency_penalty: 0.0,
+          presence_penalty: 0.0,
         });
-        return response.data.choices[0].text ?? "エラーが起きたのだ。";
+        let text = response.data.choices[0].text ?? "エラーが起きたのだ。";
+        text = text.trimStart();
+        if (text.startsWith("ずんだもん「") && text.endsWith("」")) {
+          console.log("answer is sliced.");
+          text = text.slice(6, text.length - 1);
+        }
+        return text;
       } catch (e: unknown) {
         if (e instanceof Error) {
           console.log(e.message);
@@ -42,10 +70,11 @@ const main = async () => {
         return "エラーが起きたのだ。";
       }
     })();
-    writeAnswerText(answerText);
+    console.log({commentText, answerText});
+    await writeAnswerText(answerText);
   });
 
-  liveChat.on("error", (e: unknown) => {
+  await liveChat.on("error", (e: unknown) => {
     clearCommentText();
     if (e instanceof Error) {
         console.log(e.message);
@@ -59,49 +88,31 @@ const main = async () => {
 };
 
 // open files
-const __filename = path.fromFileUrl(import.meta.url);
 const answerTextFileUrl = new URL(import.meta.resolve("./../answer.txt"));
 const commentTextFileUrl = new URL(import.meta.resolve("./../comment.txt"));
 await fs.ensureFile(answerTextFileUrl);
 await fs.ensureFile(commentTextFileUrl);
-const answerTextFile = await Deno.open(answerTextFileUrl, {read: false, write: true});
-const commentTextFile = await Deno.open(commentTextFileUrl, {read: false, write: true});
 
 const writeAnswerText = async (text: string) => {
-    const encoder = new TextEncoder();
-    const writer = answerTextFile.writable.getWriter()
-    for (const ch of [...text]) {
-        await writer.write(encoder.encode(ch));
-        await sleep(1);
-    }
-    writer.releaseLock();
+    await Deno.writeTextFile(answerTextFileUrl, text);
 };
 
 const writeCommentText = async (text: string) => {
-    const encoder = new TextEncoder();
-    const writer = commentTextFile.writable.getWriter()
-    for (const ch of [...text]) {
-        await writer.write(encoder.encode(ch));
-        await sleep(1);
-    }
-    writer.releaseLock();
+    await Deno.writeTextFile(commentTextFileUrl, text);
 };
 
 const clearCommentText = () => {
-    const encoder = new TextEncoder();
-    const writer = commentTextFile.writable.getWriter()
-    writer.write(encoder.encode(""));
-    writer.releaseLock();
 };
 
 const getEnvVariables = async () => {
   const env = await dotenv.load();
   const apiKey = env["apiKey"];
   const channelId = env["channelId"];
-  if (apiKey != null && channelId != null) {
-    return { apiKey, channelId };
+  const liveId = env["liveId"];
+  if (apiKey != null && channelId != null && liveId != null) {
+    return { apiKey, channelId, liveId };
   } else {
-    throw new Error("apiKey or channelId not found in .env");
+    throw new Error("apiKey or channelId or liveId not found in .env");
   }
 };
 

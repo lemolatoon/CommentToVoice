@@ -32,12 +32,20 @@
   "npm": {
     "specifiers": {
       "openai@3": "openai@3.1.0",
-      "youtube-chat@2": "youtube-chat@2.2.0"
+      "youtube-chat@2": "youtube-chat@2.2.0",
+      "youtube-chat@2.1": "youtube-chat@2.1.1",
+      "youtube-chat@2.2": "youtube-chat@2.2.0"
     },
     "packages": {
       "asynckit@0.4.0": {
         "integrity": "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==",
         "dependencies": {}
+      },
+      "axios@0.24.0": {
+        "integrity": "sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==",
+        "dependencies": {
+          "follow-redirects": "follow-redirects@1.15.2"
+        }
       },
       "axios@0.26.1": {
         "integrity": "sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==",
@@ -106,10 +114,21 @@
         "integrity": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
         "dependencies": {}
       },
+      "typed-emitter@1.4.0": {
+        "integrity": "sha512-weBmoo3HhpKGgLBOYwe8EB31CzDFuaK7CCL+axXhUYhn4jo6DSkHnbefboCF5i4DQ2aMFe0C/FdTWcPdObgHyg==",
+        "dependencies": {}
+      },
       "typed-emitter@2.1.0": {
         "integrity": "sha512-g/KzbYKbH5C2vPkaXGu8DJlHrGKHLsM25Zg9WuC9pMGfuvT+X25tZQWo5fK1BjBm8+UrVE9LDCvaY0CQk+fXDA==",
         "dependencies": {
           "rxjs": "rxjs@7.8.0"
+        }
+      },
+      "youtube-chat@2.1.1": {
+        "integrity": "sha512-5ybLoadfeTIKVPOLGzz+51h+2eWdLws1lH0vfw9gNp81QMq+ke9NM9HOzWE/+1B9DZnRiLt5riSdF9/3kJ3RTg==",
+        "dependencies": {
+          "axios": "axios@0.24.0",
+          "typed-emitter": "typed-emitter@1.4.0"
         }
       },
       "youtube-chat@2.2.0": {
