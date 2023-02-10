@@ -17,9 +17,6 @@ const main = async () => {
   });
   const voicevoxApi = new voicevox.DefaultApi(voicevoxConfiguration);
   const liveChat = new LiveChat({ liveId });
-  await genWavFile("test", voicevoxApi);
-  playWav();
-  return;
 
   const commentTextPrefix = `
 あなたは日本語で配信しているずんだもんです。あなたはこれから視聴者からの質問に答えます。この後に質問が続きます。語尾に必ず「～なのだ」をつけて答えてください。
@@ -53,6 +50,8 @@ const main = async () => {
     }
     await clearCommentText();
     await writeCommentText(commentText);
+    await genWavFile(`質問、${commentText}`, voicevoxApi);
+    playWav();
     const answerText = await (async () => {
       try {
         const response = await openai.createCompletion({
@@ -81,6 +80,8 @@ const main = async () => {
     })();
     console.log({ commentText, answerText });
     await writeAnswerText(answerText);
+    await genWavFile(answerText, voicevoxApi);
+    playWav();
   });
 
   await liveChat.on("error", (e: unknown) => {
@@ -96,20 +97,19 @@ const main = async () => {
   await liveChat.start();
 };
 
-const wavFileUrl = new URL(import.meta.resolve("./../voice.wav"));
-await fs.ensureFile(wavFileUrl);
+const wavPath = "./voice.wav";
+await fs.ensureFile(wavPath);
 const playWav = async () => {
-  await player.play({ path: wavFileUrl.pathname });
+  await player.play({ path: wavPath });
 };
 
 const genWavFile = async (text: string, api: voicevox.DefaultApi) => {
   const query = await api.audioQueryAudioQueryPost({ text, speaker: 1 });
-  console.log(query);
   const wav = await api.synthesisSynthesisPost({
     audioQuery: query,
     speaker: 1,
   });
-  await Deno.writeFile(wavFileUrl, wav.stream());
+  await Deno.writeFile(wavPath, wav.stream());
 };
 
 // open files
