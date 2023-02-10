@@ -2,18 +2,23 @@ import * as dotenv from "https://deno.land/std@0.177.0/dotenv/mod.ts";
 import * as fs from "https://deno.land/std@0.175.0/fs/mod.ts";
 import { Configuration, OpenAIApi } from "npm:openai@3";
 import { LiveChat } from "npm:youtube-chat@2.2";
-import * as voicevox from "./generated/index.ts";
+import player from "npm:node-wav-player";
+import * as voicevox from "npm:voicebox-api-client-generated@0.1.4";
 
 const main = async () => {
-  const { apiKey, channelId, liveId, voicevoxEndpoint } = await getEnvVariables();
+  const { apiKey, channelId, liveId, voicevoxEndpoint } =
+    await getEnvVariables();
   const configuration = new Configuration({
     apiKey: apiKey,
   });
   const openai = new OpenAIApi(configuration);
-  const voicevoxConfiguration = voicevox.createConfiguration();
+  const voicevoxConfiguration = new voicevox.Configuration({
+    basePath: voicevoxEndpoint,
+  });
   const voicevoxApi = new voicevox.DefaultApi(voicevoxConfiguration);
   const liveChat = new LiveChat({ liveId });
-  await fetchWavFile("test", voicevoxEndpoint, voicevoxApi);
+  await genWavFile("test", voicevoxApi);
+  playWav();
   return;
 
   const commentTextPrefix = `
@@ -91,19 +96,20 @@ const main = async () => {
   await liveChat.start();
 };
 
-const fetchWavFile = async (text: string, endpoint: string, api: voicevox.DefaultApi) => {
-  // const queryOptions: RequestInit = {
-  //   method: "POST",
-  // };
-  // const queryResponse = await fetch(`${endpoint}/audio_query?text=${text}&speaker=1`, queryOptions);
-  // const query = await queryResponse.json();
-  const query = await api.audioQueryAudioQueryPost(text, 1);
+const wavFileUrl = new URL(import.meta.resolve("./../voice.wav"));
+await fs.ensureFile(wavFileUrl);
+const playWav = async () => {
+  await player.play({ path: wavFileUrl.pathname });
+};
+
+const genWavFile = async (text: string, api: voicevox.DefaultApi) => {
+  const query = await api.audioQueryAudioQueryPost({ text, speaker: 1 });
   console.log(query);
-  const wavOptions: RequestInit = {
-    method: "POST",
-    body: JSON.stringify(query),
-  };
-  const wavResponse = await fetch(`${endpoint}/synthesis?speaker=1`, wavOptions)
+  const wav = await api.synthesisSynthesisPost({
+    audioQuery: query,
+    speaker: 1,
+  });
+  await Deno.writeFile(wavFileUrl, wav.stream());
 };
 
 // open files
@@ -129,12 +135,16 @@ const getEnvVariables = async () => {
   const channelId = env["channelId"];
   const liveId = env["liveId"];
   const voicevoxEndpoint = env["voicevoxEndpoint"];
-  if (apiKey != null && channelId != null && liveId != null && voicevoxEndpoint != null) {
+  if (
+    apiKey != null && channelId != null && liveId != null &&
+    voicevoxEndpoint != null
+  ) {
     return { apiKey, channelId, liveId, voicevoxEndpoint };
   } else {
-    throw new Error("apiKey or channelId or liveId or voicevoxEndpoint not found in .env");
+    throw new Error(
+      "apiKey or channelId or liveId or voicevoxEndpoint not found in .env",
+    );
   }
 };
-
 
 main();

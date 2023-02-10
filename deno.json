@@ -1,7 +1,6 @@
 {
   "tasks": {
-    "start": "deno run --unstable --allow-read --allow-env --allow-write --allow-net src/index.ts",
-    "watch": "deno run --watch --unstable --allow-read --allow-env --allow-write --allow-net src/index.ts",
-    "openapi": "openapi-generator-cli generate -i https://raw.githubusercontent.com/VOICEVOX/voicevox/d053d9837a1ace7dbbb26cd0d9af2066a6f6844b/openapi.json -g typescript --additional-properties=platform=deno -o src/generated/"
+    "start": "deno run --unstable --allow-run --allow-read --allow-env --allow-write --allow-net src/index.ts",
+    "watch": "deno run --watch --unstable --allow-read --allow-run --allow-env --allow-write --allow-net src/index.ts"
   }
 }
