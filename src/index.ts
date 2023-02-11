@@ -1,9 +1,12 @@
-import * as dotenv from "https://deno.land/std@0.177.0/dotenv/mod.ts";
-import * as fs from "https://deno.land/std@0.175.0/fs/mod.ts";
-import { Configuration, OpenAIApi } from "npm:openai@3";
-import { LiveChat } from "npm:youtube-chat@2.2";
-import player from "npm:node-wav-player";
-import * as voicevox from "npm:voicebox-api-client-generated@0.1.4";
+import * as dotenv from "dotenv";
+import fs from "node:fs";
+import { Configuration, OpenAIApi } from "openai";
+import { LiveChat } from "youtube-chat";
+// 'node-wav-player' has no type declaration
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const player = require("node-wav-player");
+import * as voicevox from "voicebox-api-client-generated";
+import portAudio from "naudiodon";
 
 const main = async () => {
   const { apiKey, channelId, liveId, voicevoxEndpoint } =
@@ -48,7 +51,6 @@ const main = async () => {
       console.log(`This is old: ${commentText}`);
       return;
     }
-    await clearCommentText();
     await writeCommentText(commentText);
     await genWavFile(`質問、${commentText}`, voicevoxApi);
     playWav();
@@ -85,7 +87,6 @@ const main = async () => {
   });
 
   await liveChat.on("error", (e: unknown) => {
-    clearCommentText();
     if (e instanceof Error) {
       console.log(e.message);
       writeAnswerText(e.message);
@@ -97,8 +98,9 @@ const main = async () => {
   await liveChat.start();
 };
 
+const VB_CABLE_NAME = "CABLE Output (VB-Audio Point)";
+
 const wavPath = "./voice.wav";
-await fs.ensureFile(wavPath);
 const playWav = async () => {
   await player.play({ path: wavPath });
 };
@@ -109,40 +111,48 @@ const genWavFile = async (text: string, api: voicevox.DefaultApi) => {
     audioQuery: query,
     speaker: 1,
   });
-  await Deno.writeFile(wavPath, wav.stream());
+  await fs.writeFile(
+    wavPath,
+    await Buffer.from(await wav.arrayBuffer()),
+    (err) => {
+      if (err) throw err;
+    }
+  );
 };
 
 // open files
-const answerTextFileUrl = new URL(import.meta.resolve("./../answer.txt"));
-const commentTextFileUrl = new URL(import.meta.resolve("./../comment.txt"));
-await fs.ensureFile(answerTextFileUrl);
-await fs.ensureFile(commentTextFileUrl);
+const answerTextFilePath = "./answer.txt";
+const commentTextFilePath = "./comment.txt";
 
 const writeAnswerText = async (text: string) => {
-  await Deno.writeTextFile(answerTextFileUrl, text);
+  await fs.writeFile(answerTextFilePath, text, (err) => {
+    if (err) throw err;
+  });
 };
 
 const writeCommentText = async (text: string) => {
-  await Deno.writeTextFile(commentTextFileUrl, text);
-};
-
-const clearCommentText = () => {
+  await fs.writeFile(commentTextFilePath, text, (err) => {
+    if (err) throw err;
+  });
 };
 
 const getEnvVariables = async () => {
-  const env = await dotenv.load();
+  dotenv.config();
+  const env = process.env;
   const apiKey = env["apiKey"];
   const channelId = env["channelId"];
   const liveId = env["liveId"];
   const voicevoxEndpoint = env["voicevoxEndpoint"];
   if (
-    apiKey != null && channelId != null && liveId != null &&
+    apiKey != null &&
+    channelId != null &&
+    liveId != null &&
     voicevoxEndpoint != null
   ) {
     return { apiKey, channelId, liveId, voicevoxEndpoint };
   } else {
     throw new Error(
-      "apiKey or channelId or liveId or voicevoxEndpoint not found in .env",
+      "apiKey or channelId or liveId or voicevoxEndpoint not found in .env"
     );
   }
 };
