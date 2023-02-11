@@ -20,6 +20,12 @@ const main = async () => {
   });
   const voicevoxApi = new voicevox.DefaultApi(voicevoxConfiguration);
   const liveChat = new LiveChat({ liveId });
+  console.log(portAudio.getDevices());
+  const deviceId = getVirtualAudioDeviceId();
+  console.log(deviceId);
+
+  await genWavFile(`test`, voicevoxApi);
+  playWav(deviceId);
 
   const commentTextPrefix = `
 あなたは日本語で配信しているずんだもんです。あなたはこれから視聴者からの質問に答えます。この後に質問が続きます。語尾に必ず「～なのだ」をつけて答えてください。
@@ -53,7 +59,7 @@ const main = async () => {
     }
     await writeCommentText(commentText);
     await genWavFile(`質問、${commentText}`, voicevoxApi);
-    playWav();
+    playWav(deviceId);
     const answerText = await (async () => {
       try {
         const response = await openai.createCompletion({
@@ -83,7 +89,7 @@ const main = async () => {
     console.log({ commentText, answerText });
     await writeAnswerText(answerText);
     await genWavFile(answerText, voicevoxApi);
-    playWav();
+    playWav(deviceId);
   });
 
   await liveChat.on("error", (e: unknown) => {
@@ -98,11 +104,30 @@ const main = async () => {
   await liveChat.start();
 };
 
-const VB_CABLE_NAME = "CABLE Output (VB-Audio Point)";
-
 const wavPath = "./voice.wav";
-const playWav = async () => {
-  await player.play({ path: wavPath });
+const getVirtualAudioDeviceId = () => {
+  const VB_CABLE_NAME = "CABLE Input (VB-Audio Virtual Cable)";
+  const deviceId = portAudio
+    .getDevices()
+    .filter((deviceInfo) => deviceInfo.name === VB_CABLE_NAME)[0].id;
+  return deviceId;
+};
+
+const playWav = (deviceId: number) => {
+  // player.play({ path: wavPath });
+  console.log(portAudio.getDevices()[deviceId]);
+  const audioIOWritableStream = portAudio.AudioIO({
+    outOptions: {
+      channelCount: 1,
+      sampleFormat: portAudio.SampleFormat16Bit,
+      sampleRate: 48000,
+      deviceId: deviceId, // Use -1 or omit the deviceId to select the default device
+      closeOnError: true, // Close the stream if an audio error is detected, if set false then just log the error
+    },
+  });
+  const wavReadableStream = fs.createReadStream(wavPath);
+  wavReadableStream.pipe(audioIOWritableStream);
+  audioIOWritableStream.start();
 };
 
 const genWavFile = async (text: string, api: voicevox.DefaultApi) => {
@@ -111,12 +136,10 @@ const genWavFile = async (text: string, api: voicevox.DefaultApi) => {
     audioQuery: query,
     speaker: 1,
   });
-  await fs.writeFile(
+  await fs.writeFileSync(
     wavPath,
     await Buffer.from(await wav.arrayBuffer()),
-    (err) => {
-      if (err) throw err;
-    }
+    "binary"
   );
 };
 
