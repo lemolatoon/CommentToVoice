@@ -4,5 +4,6 @@ comment.txt
 src/generated/*
 voice.wav
 /node_modules
+/dist
 
 *.log
