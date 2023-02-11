@@ -2,6 +2,8 @@ import * as dotenv from "dotenv";
 import fs from "node:fs";
 import { Configuration, OpenAIApi } from "openai";
 import { LiveChat } from "youtube-chat";
+// 'node-wav-player' has no type declaration
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const player = require("node-wav-player");
 import * as voicevox from "voicebox-api-client-generated";
 import portAudio from "naudiodon";

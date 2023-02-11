@@ -11,7 +11,8 @@
     "build": "yarn tsc",
     "start": "node dist/index.js",
     "watch": "yarn nodemon dist/index.js",
-    "fmt": "prettier --write src/**/*.ts *.json"
+    "fmt": "prettier --write src/**/*.ts *.json",
+    "lint:fix": "eslint --ext ts,tsx --fix src"
   },
   "dependencies": {
     "dotenv": "^16.0.3",
@@ -23,6 +24,9 @@
   },
   "devDependencies": {
     "@types/node": "^18.13.0",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
+    "eslint": "^8.34.0",
     "nodemon": "^2.0.20",
     "prettier": "^2.8.4",
     "ts-node": "^10.9.1",
