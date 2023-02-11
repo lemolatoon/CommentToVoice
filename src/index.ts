@@ -1,4 +1,4 @@
-import * as dotenv from 'dotenv'
+import * as dotenv from "dotenv";
 import fs from "node:fs";
 import { Configuration, OpenAIApi } from "openai";
 import { LiveChat } from "youtube-chat";
@@ -18,7 +18,6 @@ const main = async () => {
   });
   const voicevoxApi = new voicevox.DefaultApi(voicevoxConfiguration);
   const liveChat = new LiveChat({ liveId });
-
 
   const commentTextPrefix = `
 あなたは日本語で配信しているずんだもんです。あなたはこれから視聴者からの質問に答えます。この後に質問が続きます。語尾に必ず「～なのだ」をつけて答えてください。
@@ -110,9 +109,13 @@ const genWavFile = async (text: string, api: voicevox.DefaultApi) => {
     audioQuery: query,
     speaker: 1,
   });
-  await fs.writeFile(wavPath, await Buffer.from(await wav.arrayBuffer()), (err) => {
-    if (err) throw err;
-  })
+  await fs.writeFile(
+    wavPath,
+    await Buffer.from(await wav.arrayBuffer()),
+    (err) => {
+      if (err) throw err;
+    }
+  );
 };
 
 // open files
@@ -131,7 +134,6 @@ const writeCommentText = async (text: string) => {
   });
 };
 
-
 const getEnvVariables = async () => {
   dotenv.config();
   const env = process.env;
@@ -140,13 +142,15 @@ const getEnvVariables = async () => {
   const liveId = env["liveId"];
   const voicevoxEndpoint = env["voicevoxEndpoint"];
   if (
-    apiKey != null && channelId != null && liveId != null &&
+    apiKey != null &&
+    channelId != null &&
+    liveId != null &&
     voicevoxEndpoint != null
   ) {
     return { apiKey, channelId, liveId, voicevoxEndpoint };
   } else {
     throw new Error(
-      "apiKey or channelId or liveId or voicevoxEndpoint not found in .env",
+      "apiKey or channelId or liveId or voicevoxEndpoint not found in .env"
     );
   }
 };
